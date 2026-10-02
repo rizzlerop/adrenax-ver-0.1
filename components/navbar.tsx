@@ -17,7 +17,7 @@ export function Navbar({ signedIn }: { signedIn: boolean }) {
         </Link>
         <nav className="hidden items-center gap-9 text-sm text-white/55 md:flex">
           <Link className="transition hover:text-white" href="/shop">Shop all</Link>
-          <a className="transition hover:text-white" href="/#collections">Collections</a>
+          <Link className="transition hover:text-white" href="/collections">Collections</Link>
           <a className="transition hover:text-white" href="/#story">Our edge</a>
         </nav>
         <div className="flex items-center gap-3 sm:gap-5">
