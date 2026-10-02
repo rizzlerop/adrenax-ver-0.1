@@ -15,6 +15,6 @@ export async function requireAdmin() {
     .eq('id', user.id)
     .maybeSingle()
 
-  if (!role?.is_admin) redirect('/login?denied=1')
+  if (!role?.is_admin) redirect('/profile?access=admin')
   return { supabase, user }
 }

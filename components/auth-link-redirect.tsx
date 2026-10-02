@@ -18,7 +18,7 @@ export function AuthLinkRedirect() {
       void supabase.auth.getSession().then(({ data: { session } }) => {
         if (!active) return
         if (session && (flow === 'invite' || flow === 'recovery')) router.replace('/set-password')
-        else if (session) router.replace('/')
+        else if (session) router.replace('/profile')
         else if (hashParams.has('error_code') || hashParams.has('error_description')) {
           router.replace(flow === 'invite' || flow === 'recovery' ? '/set-password?link=invalid' : '/login')
         }
@@ -27,7 +27,7 @@ export function AuthLinkRedirect() {
 
     const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
       if (!active || !session || event !== 'SIGNED_IN') return
-      router.replace(flow === 'invite' || flow === 'recovery' ? '/set-password' : '/')
+      router.replace(flow === 'invite' || flow === 'recovery' ? '/set-password' : '/profile')
     })
     redirectWithSession()
 

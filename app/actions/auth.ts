@@ -18,9 +18,8 @@ export async function signInAction(_previousState: LoginState, formData: FormDat
   if (error || !data.user) return { error: 'Those login details did not match an account.' }
 
   const { data: role } = await supabase.from('user_roles').select('is_admin').eq('id', data.user.id).maybeSingle()
-  const next = String(formData.get('next') ?? '')
-  if (role?.is_admin) redirect(next.startsWith('/admin') ? next : '/admin')
-  redirect(next.startsWith('/') && !next.startsWith('//') ? next : '/')
+  if (role?.is_admin) redirect('/admin')
+  redirect('/profile')
 }
 
 export async function registerAction(_previousState: RegisterState, formData: FormData): Promise<RegisterState> {
@@ -36,7 +35,7 @@ export async function registerAction(_previousState: RegisterState, formData: Fo
   const supabase = await createClient()
   const { data, error } = await supabase.auth.signUp({ email, password })
   if (error) return { error: error.message }
-  if (data.session) redirect('/')
+  if (data.session) redirect('/profile')
 
   return { notice: 'Check your inbox for a confirmation link. After confirming your email, you can sign in.' }
 }

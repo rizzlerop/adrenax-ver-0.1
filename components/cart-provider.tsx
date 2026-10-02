@@ -15,24 +15,76 @@ type CartContextValue = {
 
 const CartContext = createContext<CartContextValue | null>(null)
 const STORAGE_KEY = 'adrenax-cart-v1'
+const GUEST_STORAGE_KEY = `${STORAGE_KEY}:guest`
 
-export function CartProvider({ children }: { children: ReactNode }) {
+function readCart(key: string): CartItem[] {
+  try {
+    const saved = localStorage.getItem(key) ?? (key === GUEST_STORAGE_KEY ? localStorage.getItem(STORAGE_KEY) : null)
+    const parsed: unknown = saved ? JSON.parse(saved) : []
+    if (!Array.isArray(parsed)) return []
+    return parsed.filter((item): item is CartItem =>
+      Boolean(item) &&
+      typeof item.id === 'string' &&
+      typeof item.name === 'string' &&
+      typeof item.price === 'number' &&
+      (typeof item.image_url === 'string' || item.image_url === null) &&
+      typeof item.quantity === 'number' &&
+      typeof item.stock_quantity === 'number'
+    )
+  } catch {
+    return []
+  }
+}
+
+function mergeCarts(accountItems: CartItem[], guestItems: CartItem[]): CartItem[] {
+  const merged = new Map(accountItems.map((item) => [item.id, item]))
+  for (const guestItem of guestItems) {
+    const accountItem = merged.get(guestItem.id)
+    const stockQuantity = accountItem
+      ? Math.min(accountItem.stock_quantity, guestItem.stock_quantity)
+      : guestItem.stock_quantity
+    merged.set(guestItem.id, {
+      ...(accountItem ?? guestItem),
+      quantity: Math.min(stockQuantity, (accountItem?.quantity ?? 0) + guestItem.quantity),
+      stock_quantity: stockQuantity,
+    })
+  }
+  return [...merged.values()].filter((item) => item.quantity > 0 && item.stock_quantity > 0)
+}
+
+export function CartProvider({ children, userId }: { children: ReactNode; userId: string | null }) {
   const [items, setItems] = useState<CartItem[]>([])
   const [ready, setReady] = useState(false)
+  const storageKey = userId ? `${STORAGE_KEY}:${userId}` : GUEST_STORAGE_KEY
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY)
-      if (saved) setItems(JSON.parse(saved) as CartItem[])
-    } catch {
-      localStorage.removeItem(STORAGE_KEY)
+    let saved = readCart(storageKey)
+    if (userId) {
+      const guestItems = readCart(GUEST_STORAGE_KEY)
+      if (guestItems.length) {
+        saved = mergeCarts(saved, guestItems)
+        try {
+          localStorage.setItem(storageKey, JSON.stringify(saved))
+          localStorage.removeItem(GUEST_STORAGE_KEY)
+          localStorage.removeItem(STORAGE_KEY)
+        } catch {
+          // Keep the in-memory cart available if browser storage is full or blocked.
+        }
+      }
     }
+    setItems(saved)
     setReady(true)
-  }, [])
+  }, [storageKey, userId])
 
   useEffect(() => {
-    if (ready) localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
-  }, [items, ready])
+    if (ready) {
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(items))
+      } catch {
+        // Keep the in-memory cart available if browser storage is full or blocked.
+      }
+    }
+  }, [items, ready, storageKey])
 
   const value = useMemo<CartContextValue>(() => ({
     items,
