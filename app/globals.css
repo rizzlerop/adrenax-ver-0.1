@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #08060c;
+  --color-panel: #110d18;
+  --color-neon: #c44dff;
+  --color-neon-bright: #db8aff;
+  --color-gold: #d7b15e;
+  --color-gold-soft: #efcf83;
+  --font-sans: Arial, Helvetica, sans-serif;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { background: var(--color-ink); color: #f7f4fb; font-family: Arial, Helvetica, sans-serif; }
+::selection { background: var(--color-neon); color: var(--color-ink); }
+button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
+.eyebrow { color: rgb(196 77 255 / 82%); font-size: 10px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; }
