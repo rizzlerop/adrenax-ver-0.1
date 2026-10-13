@@ -5,7 +5,7 @@ import { createClient } from '@/utils/supabase/server'
 import { getSupabaseConfig } from '@/utils/supabase/env'
 
 export const metadata: Metadata = { title: 'Sign in' }
-type Props = { searchParams: Promise<{ setup?: string; denied?: string }> }
+type Props = { searchParams: Promise<{ setup?: string; denied?: string; oauthError?: string }> }
 
 export default async function LoginPage({ searchParams }: Props) {
   const params = await searchParams
@@ -17,5 +17,5 @@ export default async function LoginPage({ searchParams }: Props) {
       redirect(role?.is_admin ? '/admin' : '/profile')
     }
   }
-  return <LoginForm setup={Boolean(params.setup)} denied={Boolean(params.denied)} />
+  return <LoginForm setup={Boolean(params.setup)} denied={Boolean(params.denied)} oauthError={Boolean(params.oauthError)} />
 }

@@ -6,6 +6,7 @@ import { ArrowLeft, UserRoundPlus } from 'lucide-react'
 import { registerAction, type RegisterState } from '@/app/actions/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { GoogleSignInButton } from '@/components/google-sign-in-button'
 
 const initialState: RegisterState = {}
 
@@ -31,6 +32,10 @@ export function RegisterForm() {
               <Button className="mt-2 w-full" disabled={pending}>{pending ? 'Creating account…' : 'Create account'}</Button>
             </form>
           )}
+
+          <div className="my-6 flex items-center gap-3 text-[10px] uppercase tracking-[.16em] text-white/25"><span className="h-px flex-1 bg-white/[.08]" />or<span className="h-px flex-1 bg-white/[.08]" /></div>
+          <GoogleSignInButton />
+          <p className="mt-3 text-center text-xs text-white/35">Google accounts get a standard customer profile.</p>
 
           <p className="mt-6 text-center text-xs text-white/40">Already have an account? <Link href="/login" className="text-neon hover:underline">Sign in</Link></p>
         </section>

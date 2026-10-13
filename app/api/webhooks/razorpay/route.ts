@@ -1,5 +1,6 @@
 import { createServiceClient } from '@/utils/supabase/service'
 import { getRazorpayConfig, verifyWebhookSignature } from '@/utils/razorpay'
+import { sendOrderNotification } from '@/utils/email/order-notification'
 
 export const runtime = 'nodejs'
 
@@ -35,7 +36,10 @@ export async function POST(request: Request) {
       p_currency: payment.currency,
     })
     if (error) throw error
-    return Response.json({ received: true, status: (data as { status?: string }).status ?? 'ignored' })
+    const status = (data as { status?: string }).status ?? 'ignored'
+    const orderId = (data as { order_id?: string }).order_id
+    if (orderId && (status === 'paid' || status === 'refund_required')) await sendOrderNotification(orderId)
+    return Response.json({ received: true, status })
   } catch (error) {
     console.error('Razorpay webhook order update failed', error)
     return Response.json({ error: 'webhook_processing_failed' }, { status: 500 })

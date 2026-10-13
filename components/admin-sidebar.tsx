@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Boxes, ClipboardList, LayoutDashboard, Plus, Store } from 'lucide-react'
+import { Boxes, ClipboardList, Layers3, LayoutDashboard, Plus, Store } from 'lucide-react'
 import { signOutAction } from '@/app/actions/auth'
 import { BrandMark } from './brand-mark'
 import { BrandWordmark } from './brand-wordmark'
@@ -8,6 +8,7 @@ const links = [
   { href: '/admin', label: 'Overview', icon: LayoutDashboard },
   { href: '/admin/orders', label: 'Orders', icon: ClipboardList },
   { href: '/admin/products', label: 'Products', icon: Boxes },
+  { href: '/admin/collections', label: 'Collections', icon: Layers3 },
   { href: '/admin/products/add', label: 'Add product', icon: Plus },
 ]
 

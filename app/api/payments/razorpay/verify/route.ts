@@ -1,6 +1,7 @@
 import { createClient as createSessionClient } from '@/utils/supabase/server'
 import { createServiceClient } from '@/utils/supabase/service'
 import { getRazorpayConfig, razorpayRequest, verifyCheckoutSignature } from '@/utils/razorpay'
+import { sendOrderNotification } from '@/utils/email/order-notification'
 
 export const runtime = 'nodejs'
 
@@ -32,7 +33,11 @@ export async function POST(request: Request) {
       .maybeSingle()
     if (orderError || !order || order.user_id !== user.id) return Response.json({ error: 'order_not_found' }, { status: 404 })
     if (!verifyCheckoutSignature(orderId, paymentId, signature, config.keySecret)) return Response.json({ error: 'payment_signature_invalid' }, { status: 400 })
-    if (order.status === 'paid' && order.razorpay_payment_id === paymentId) return Response.json({ status: 'paid', orderId: order.id })
+    if (order.status === 'paid' && order.razorpay_payment_id === paymentId) {
+      try { await sendOrderNotification(order.id) }
+      catch (emailError) { console.error('Order notification email could not be sent', emailError) }
+      return Response.json({ status: 'paid', orderId: order.id })
+    }
 
     let payment = await razorpayRequest<RazorpayPayment>(`/payments/${encodeURIComponent(paymentId)}`)
     if (payment.order_id !== orderId || payment.amount !== order.amount_paise || payment.currency !== order.currency) {
@@ -54,8 +59,12 @@ export async function POST(request: Request) {
     })
     if (error) throw error
     const completion = data as Completion
-    if (completion.status === 'paid') return Response.json({ status: 'paid', orderId: completion.order_id ?? order.id })
-    if (completion.status === 'refund_required') return Response.json({ status: 'refund_required', orderId: completion.order_id ?? order.id }, { status: 409 })
+    if (completion.status === 'paid' || completion.status === 'refund_required') {
+      try { await sendOrderNotification(completion.order_id ?? order.id) }
+      catch (emailError) { console.error('Order notification email could not be sent', emailError) }
+      if (completion.status === 'paid') return Response.json({ status: 'paid', orderId: completion.order_id ?? order.id })
+      return Response.json({ status: 'refund_required', orderId: completion.order_id ?? order.id }, { status: 409 })
+    }
     return Response.json({ error: 'payment_verification_failed' }, { status: 409 })
   } catch (error) {
     console.error('Razorpay payment verification failed', error)
